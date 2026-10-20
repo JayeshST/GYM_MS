@@ -1,4 +1,4 @@
-package com.app;
+package com.app.gym;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
