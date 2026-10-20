@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>ग्रंथालय | Digital Library</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        /* ================= ROOT THEME ================= */
+        :root {
+            --bg-overlay: rgba(0,0,0,0.65);
+            --text-color: white;
+            --card-bg: white;
+            --footer-bg: #111;
+        }
+
+        body.dark {
+            --bg-overlay: rgba(255,255,255,0.1);
+            --text-color: black;
+            --card-bg: #f5f5f5;
+            --footer-bg: #222;
+            background-color: #111;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da')
+            no-repeat center center fixed;
+            background-size: cover;
+            transition: 0.3s;
+        }
+
+        /* ================= OVERLAY ================= */
+        .overlay {
+            background: var(--bg-overlay);
+            min-height: 100vh;
+            padding-bottom: 40px;
+            color: var(--text-color);
+        }
+
+        /* ================= HEADER ================= */
+        .header {
+            padding: 20px;
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        /* ================= HERO ================= */
+        .hero {
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 50px;
+            font-weight: bold;
+        }
+
+        .login-btn {
+            margin-top: 20px;
+            padding: 12px 40px;
+            border-radius: 30px;
+            border: none;
+            background: #ffc107;
+            font-weight: bold;
+        }
+
+        .login-btn:hover {
+            background: #ff9800;
+        }
+
+        /* ================= GALLERY ================= */
+        .gallery {
+            background: white;
+            padding: 10px 5px;
+            text-align: center;
+        }
+
+        .gallery img {
+            width: 220px;
+            height: 160px;
+            margin: 10px;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.05);
+        }
+
+
+
+/* Prevent background image bleeding */
+.overlay, .gallery, .container {
+    position: relative;
+    z-index: 1;
+}
+
+        /* ================= THEME BUTTON ================= */
+        .theme-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 999;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 20px;
+            background: #000;
+            color: white;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- THEME BUTTON -->
+<button class="theme-btn" onclick="toggleTheme()">🌗 Theme</button>
+
+
+
+<!-- HERO -->
+<div class="overlay">
+
+    <div class="header">📚 ग्रंथालय Digital Library</div>
+
+    <div class="hero">
+        <h1>📚 ग्रंथालय</h1>
+        <p> Search, Manage & Read Books Online</p>
+        <p>पुस्तकांचा विशाल खजिना — शोधा, वाचा आणि ज्ञान वाढवा</p>
+        <p>तुमच्या बोटांच्या टोकावर संपूर्ण डिजिटल ग्रंथालय अनुभव</p>
+
+        <a href="/login">
+            <button class="login-btn">🔐 प्रवेश करा (Login)</button>
+        </a>
+    </div>
+
+</div>
+
+<!-- GALLERY -->
+<div class="gallery">
+    <h2>📖 Library Collection</h2>
+<img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1600&q=80">
+
+<img src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1600&q=80">
+
+<img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1600&q=80">
+
+<img src="https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1600&q=80">
+
+<img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1600&q=80">
+
+</div>
+
+
+
+
+
+<footer style="background:#111; color:#fff; padding:15px 0; margin-top:0px; font-size:13px;">
+
+    <div class="container text-center">
+
+        <p style="margin:0;">
+            📚 ग्रंथालय | Digital Library System
+        </p>
+
+        <p style="margin:5px 0;">
+            📍 Mumbai, Maharashtra | 📞 +91*** *** 111 | 📧 projectsupport.jayesh@gmail.com
+        </p>
+
+        <small>
+            © 2026 ग्रंथालय. All Rights Reserved.
+        </small>
+
+    </div>
+
+</footer>
+
+
+
+
+<!-- ================= JS ================= -->
+<script>
+
+    // THEME TOGGLE
+    function toggleTheme() {
+        document.body.classList.toggle("dark");
+    }
+
+</script>
+
+</body>
+</html>

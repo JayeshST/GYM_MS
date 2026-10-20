@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Book Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+
+            background: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f')
+            no-repeat center center fixed;
+
+            background-size: cover;
+        }
+
+        .overlay {
+            min-height: 100vh;
+            background: rgba(255,255,255,0.92);
+            padding: 30px;
+        }
+
+        .card {
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="overlay">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-dark bg-dark px-4">
+
+        <a class="navbar-brand">
+            📚 ग्रंथालय
+        </a>
+
+        <div class="text-white d-flex align-items-center gap-3">
+
+            👤 <span th:text="${user != null ? user.fullName : 'Guest'}"></span>
+
+            📧 <span th:text="${user.email}"></span>
+
+            ⏱ Session:
+            <span class="text-warning ms-3">
+    ⏳ Time Left: <span id="timer">05:00</span>
+</span>
+            <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
+
+        </div>
+
+    </nav>
+
+    <div class="container mt-4">
+
+        <!-- SUCCESS -->
+        <div th:if="${success}" class="alert alert-success">
+            <span th:text="${success}"></span>
+        </div>
+
+        <!-- ERROR -->
+        <div th:if="${error}" class="alert alert-danger">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- TITLE -->
+        <h2 class="text-center mb-4">📖 Book Management Dashboard</h2>
+
+        <!-- ADD / EDIT BOOK -->
+        <div class="card p-4 mb-4">
+
+            <form method="post" action="/save" th:object="${book}">
+
+                <input type="hidden" th:field="*{id}">
+
+                <div class="row g-2">
+
+                    <div class="col-md-4">
+                        <input type="text" th:field="*{title}" class="form-control"
+                               placeholder="Book Title" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <input type="text" th:field="*{author}" class="form-control"
+                               placeholder="Author" required>
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="number" th:field="*{price}" class="form-control"
+                               placeholder="Price" required>
+                    </div>
+
+                    <div class="col-md-2">
+                        <button class="btn btn-success w-100">
+                            <span th:if="${book.id == null}">Add</span>
+                            <span th:if="${book.id != null}">Update</span>
+                        </button>
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+        <!-- SEARCH -->
+    <form method="get" action="/books" class="mb-4">
+    <div class="row">
+        <div class="col-md-10">
+            <input type="text"
+                   name="keyword"
+                   class="form-control"
+                   placeholder="Search by title or author"
+                   th:value="${keyword}">
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+                Search
+            </button>
+        </div>
+    </div>
+</form>
+        <!-- TABLE -->
+        <div class="card p-3">
+
+            <table class="table table-bordered table-hover">
+
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="b : ${books}">
+
+                    <td th:text="${b.id}"></td>
+
+                    <td>
+                        <a th:href="@{'/book/' + ${b.id}}"
+                           class="text-decoration-none fw-bold">
+                            <span th:text="${b.title}"></span>
+                        </a>
+                    </td>
+
+                    <td th:text="${b.author}"></td>
+
+                    <td>₹ <span th:text="${b.price}"></span></td>
+
+                    <td>
+
+                        <a th:href="@{'/edit/' + ${b.id}}"
+                           class="btn btn-primary btn-sm me-1">
+                            Edit
+                        </a>
+
+                        <a th:href="@{'/delete/' + ${b.id}}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Delete this book?')">
+                            Delete
+                        </a>
+
+                    </td>
+
+                </tr>
+                </tbody>
+
+            </table>
+
+            <!-- PAGINATION -->
+            <nav>
+                <ul class="pagination justify-content-center">
+
+                    <li class="page-item"
+                        th:classappend="${currentPage == 0} ? 'disabled'">
+
+                        <a class="page-link"
+                           th:href="@{'/books?page=' + ${currentPage - 1} + '&keyword=' + ${keyword}}">
+                            Previous
+                        </a>
+
+                    </li>
+
+                    <li class="page-item"
+                        th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${i == currentPage} ? 'active'">
+
+                        <a class="page-link"
+                           th:text="${i + 1}"
+                           th:href="@{'/books?page=' + ${i} + '&keyword=' + ${keyword}}">
+                        </a>
+
+                    </li>
+
+                    <li class="page-item"
+                        th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+
+                        <a class="page-link"
+                           th:href="@{'/books?page=' + ${currentPage + 1} + '&keyword=' + ${keyword}}">
+                            Next
+                        </a>
+
+                    </li>
+
+                </ul>
+            </nav>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+
+    // ================= INACTIVITY AUTO LOGOUT (5 min idle)
+    let inactivityTimer;
+
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+
+        inactivityTimer = setTimeout(() => {
+            alert("Session expired due to inactivity!");
+            window.location.href = "/logout";
+        }, 5 * 60 * 1000);
+    }
+
+    // reset events
+    document.addEventListener("mousemove", resetInactivityTimer);
+    document.addEventListener("keypress", resetInactivityTimer);
+    document.addEventListener("click", resetInactivityTimer);
+    document.addEventListener("scroll", resetInactivityTimer);
+
+
+    // ================= TRUE REVERSE COUNTDOWN (5 MIN → 0)
+    let totalSeconds = 5 * 60;
+
+    function startCountdown() {
+
+        let display = document.getElementById("counter");
+
+        let timer = setInterval(() => {
+
+            let minutes = Math.floor(totalSeconds / 60);
+            let seconds = totalSeconds % 60;
+
+            display.innerText =
+                String(minutes).padStart(2, '0') + ":" +
+                String(seconds).padStart(2, '0');
+
+            totalSeconds--;
+
+            if (totalSeconds < 0) {
+                clearInterval(timer);
+
+                alert("Session expired!");
+                window.location.href = "/logout";
+            }
+
+        }, 1000);
+    }
+
+    // ✅ SINGLE ONLOAD (FIXED)
+    window.onload = function () {
+        resetInactivityTimer();
+        startCountdown();
+    };
+
+</script>
+</body>
+</html>
