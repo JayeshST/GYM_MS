@@ -17,13 +17,38 @@ public class GymUserEntity extends GymBaseEntity {
     @Column(name = "FULL_NAME", nullable = false, length = 150)
     private String fullName;
 
-    @Column(name = "EMAIL", length = 254)
+//    @Column(name = "EMAIL", length = 254)
+//    private String email;
+    @Column(name = "EMAIL", nullable = false, length = 254)
     private String email;
+    
 
     @Column(name = "MOBILE_NUMBER", length = 20)
     private String mobileNumber;
 
-    @Column(
+    @Column(name = "ADDRESS", length = 500)
+    private String address;
+
+    @Column(name = "AUTH_VERSION", nullable = false)
+    private Long authVersion = 0L;
+    
+    public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public Long getAuthVersion() {
+		return authVersion;
+	}
+
+	public void setAuthVersion(Long authVersion) {
+		this.authVersion = authVersion;
+	}
+
+	@Column(
         name = "MUST_CHANGE_PASSWORD",
         nullable = false,
         precision = 1
