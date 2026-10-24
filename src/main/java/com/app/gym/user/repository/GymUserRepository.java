@@ -4,12 +4,16 @@ import java.util.Optional;
 import javax.persistence.LockModeType;
 
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import com.app.gym.common.entity.GymUserEntity;
+import com.app.gym.dto.GymUserDetailsResponseDto;
+import com.app.gym.dto.GymUserListItemDto;
 public interface GymUserRepository
         extends JpaRepository<GymUserEntity, Long> {
 
@@ -39,6 +43,46 @@ public interface GymUserRepository
     @Query("SELECT u FROM GymUserEntity u WHERE u.id = :userId")
     Optional<GymUserEntity> findUserForPasswordChange(
             @Param("userId") Long userId);
+    @Query(
+    	    value =
+    	        "SELECT new com.app.gym.dto.GymUserListItemDto(" +
+    	        "u.id, u.fullName, u.email, u.mobileNumber, " +
+    	        "u.isActive, u.createdAt) " +
+    	        "FROM GymUserEntity u " +
+    	        "WHERE u.isDeleted = 0 " +
+    	        "AND (:isActive IS NULL OR u.isActive = :isActive) " +
+    	        "AND (:search IS NULL " +
+    	        "OR LOCATE(:search, LOWER(u.fullName)) > 0 " +
+    	        "OR LOCATE(:search, LOWER(u.email)) > 0 " +
+    	        "OR LOCATE(:search, u.mobileNumber) > 0)",
+
+    	    countQuery =
+    	        "SELECT COUNT(u.id) " +
+    	        "FROM GymUserEntity u " +
+    	        "WHERE u.isDeleted = 0 " +
+    	        "AND (:isActive IS NULL OR u.isActive = :isActive) " +
+    	        "AND (:search IS NULL " +
+    	        "OR LOCATE(:search, LOWER(u.fullName)) > 0 " +
+    	        "OR LOCATE(:search, LOWER(u.email)) > 0 " +
+    	        "OR LOCATE(:search, u.mobileNumber) > 0)"
+    	)
+    	Page<GymUserListItemDto> searchUserList(
+    	        @Param("search") String search,
+    	        @Param("isActive") Integer isActive,
+    	        Pageable pageable);
+    
+    
+    @Query(
+    	    "SELECT new com.app.gym.dto.GymUserDetailsResponseDto(" +
+    	    "u.id, u.fullName, u.email, u.mobileNumber, u.address, " +
+    	    "u.isActive, u.createdAt, u.updatedAt) " +
+    	    "FROM GymUserEntity u " +
+    	    "WHERE u.id = :userId " +
+    	    "AND u.isDeleted = 0"
+    	)
+    	Optional<GymUserDetailsResponseDto> findUserDetails(
+    	        @Param("userId") Long userId);
+    
     
     
 }

@@ -90,6 +90,14 @@ public class GymSecurityConfig {
                             HttpMethod.POST,
                             "/register-user")
                         .authenticated()
+                        .antMatchers(
+                                HttpMethod.GET,
+                                "/get-user-list")
+                            .authenticated()
+                            .antMatchers(
+                                    HttpMethod.GET,
+                                    "/get-user/*")
+                                .authenticated()
                 .anyRequest()
                     .denyAll()
             .and()

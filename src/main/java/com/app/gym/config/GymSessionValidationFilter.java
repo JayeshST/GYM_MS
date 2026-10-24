@@ -17,7 +17,6 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.app.gym.common.entity.GymUserEntity;
-import com.app.gym.config.GymAuthenticatedUser;
 import com.app.gym.user.repository.GymUserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
