@@ -1,0 +1,140 @@
+<div class="workspace-shell">
+  <aside class="sidebar" aria-label="Workspace navigation">
+    <a class="sidebar-brand" routerLink="/dashboard">
+      <span class="brand-icon" aria-hidden="true">G</span>
+      <span>GYM<span class="accent">MS</span></span>
+    </a>
+
+    <p class="nav-heading">WORKSPACE</p>
+
+    <nav aria-label="Main navigation">
+      <a
+        routerLink="/dashboard"
+        class="nav-item active"
+        aria-current="page"
+      >
+        <span class="nav-symbol" aria-hidden="true">▦</span>
+        Overview
+      </a>
+
+      <a routerLink="/change-password" class="nav-item">
+        <span class="nav-symbol" aria-hidden="true">◇</span>
+        Change password
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <p>Keep moving forward.</p>
+      <span>One good day at a time.</span>
+    </div>
+  </aside>
+
+  <div class="workspace-main">
+    <header class="topbar">
+      <div>
+        <span class="topbar-caption">YOUR WORKSPACE</span>
+        <strong>Overview</strong>
+      </div>
+
+      <div class="actions">
+        @if (auth.user(); as user) {
+          <span class="user-name">{{ user.fullName }}</span>
+
+          <span class="avatar" aria-hidden="true">
+            {{ user.fullName.slice(0, 1).toUpperCase() }}
+          </span>
+        }
+
+        <button
+          type="button"
+          class="secondary"
+          [disabled]="busy()"
+          (click)="logout()"
+        >
+          {{ busy() ? 'Signing out...' : 'Sign out' }}
+        </button>
+      </div>
+    </header>
+
+    <main class="dashboard-content">
+      @if (error()) {
+        <div class="alert error" role="alert">{{ error() }}</div>
+      }
+
+      @if (auth.user(); as user) {
+        <section class="dashboard-hero" aria-labelledby="welcome-title">
+          <div class="hero-content">
+            <span class="hero-pill">YOUR DAILY STARTING POINT</span>
+
+            <h1 id="welcome-title">
+              Let's get moving,<br />
+              <span class="accent">{{ user.fullName }}.</span>
+            </h1>
+
+            <p>
+              Your account and workspace, together in one place.
+            </p>
+
+            <a routerLink="/change-password" class="hero-link">
+              Manage your password <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </section>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">PERSONAL WORKSPACE</p>
+            <h2>Your account at a glance</h2>
+          </div>
+        </div>
+
+        <section class="summary-grid" aria-label="Account summary">
+          <article class="summary-card">
+            <span class="card-kicker">ACCOUNT</span>
+            <h3>{{ user.fullName }}</h3>
+            <p>Your registered name</p>
+          </article>
+
+          <article class="summary-card">
+            <span class="card-kicker">CONTACT</span>
+            <h3 class="email-value">{{ user.email }}</h3>
+            <p>Your sign-in email address</p>
+          </article>
+
+          <article class="summary-card accent-card">
+            <span class="card-kicker">USER ID</span>
+            <h3>#{{ user.userId }}</h3>
+            <p>Your unique account reference</p>
+          </article>
+        </section>
+
+        <section class="account-card" aria-labelledby="profile-title">
+          <div class="account-heading">
+            <div>
+              <p class="eyebrow">PROFILE</p>
+              <h2 id="profile-title">Account details</h2>
+            </div>
+
+            <span class="profile-tag">My account</span>
+          </div>
+
+          <dl>
+            <dt>Full name</dt>
+            <dd>{{ user.fullName }}</dd>
+
+            <dt>Email address</dt>
+            <dd>{{ user.email }}</dd>
+
+            <dt>User ID</dt>
+            <dd>{{ user.userId }}</dd>
+          </dl>
+        </section>
+
+        <footer class="dashboard-footer">
+          <span>GYM MS · Your everyday workspace</span>
+          <a routerLink="/change-password">Account settings →</a>
+        </footer>
+      }
+    </main>
+  </div>
+</div>

@@ -1,0 +1,118 @@
+<main class="login-layout">
+  <section class="login-visual" aria-label="Gym MS introduction">
+    <div class="visual-brand">
+      <span class="brand-icon" aria-hidden="true">G</span>
+      <span>GYM<span class="accent">MS</span></span>
+    </div>
+
+    <div class="visual-copy">
+      <span class="eyebrow light">BUILT FOR YOUR EVERYDAY</span>
+
+      <h1>
+        Stronger teams.<br />
+        Better <span class="accent">every day.</span>
+      </h1>
+
+      <p>
+        A dedicated workspace for the people who keep your gym moving.
+      </p>
+    </div>
+
+    <div class="visual-footer">
+      <span class="small-line" aria-hidden="true"></span>
+      Your gym. Your people. One workspace.
+    </div>
+  </section>
+
+  <section class="login-panel" aria-labelledby="login-title">
+    <div class="login-form-wrap">
+      <p class="eyebrow">WELCOME TO YOUR WORKSPACE</p>
+
+      <h2 id="login-title">Good to see you.</h2>
+      <p class="muted">
+        Enter your account details to continue.
+      </p>
+
+      @if (checking()) {
+        <p class="status-message" role="status">
+          Checking your session...
+        </p>
+      }
+
+      @if (error()) {
+        <div class="alert error" role="alert">{{ error() }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <fieldset [disabled]="checking() || busy()">
+          <label for="email">Email address</label>
+
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            autocomplete="username"
+            placeholder="you@example.com"
+            maxlength="254"
+            required
+            [attr.aria-invalid]="
+              form.controls.email.touched && form.controls.email.invalid
+            "
+            aria-describedby="email-error"
+          />
+
+          <div id="email-error">
+            @if (
+              form.controls.email.touched &&
+              form.controls.email.invalid
+            ) {
+              <p class="field-error">Enter a valid email address.</p>
+            }
+          </div>
+
+          <label for="password">Password</label>
+
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            required
+            [attr.aria-invalid]="
+              form.controls.password.touched &&
+              form.controls.password.invalid
+            "
+            aria-describedby="password-error"
+          />
+
+          <div id="password-error">
+            @if (
+              form.controls.password.touched &&
+              form.controls.password.invalid
+            ) {
+              <p class="field-error">Password is required.</p>
+            }
+          </div>
+
+          <button
+            type="submit"
+            class="primary full-width login-submit"
+          >
+            <span>{{ busy() ? 'Signing in...' : 'Sign in' }}</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </fieldset>
+      </form>
+
+      <p class="login-help">
+        Need access? Contact your gym administrator.
+      </p>
+
+      <footer class="form-footer">
+        <span class="brand-label">GYM MS</span>
+        <span>Made for a stronger routine.</span>
+      </footer>
+    </div>
+  </section>
+</main>
