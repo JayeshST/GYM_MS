@@ -16,7 +16,6 @@ import org.springframework.security.web.access.intercept.FilterSecurityIntercept
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
-import com.app.gym.config.GymSessionValidationFilter;
 import com.app.gym.user.repository.GymUserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -57,70 +56,111 @@ public class GymSecurityConfig {
             .securityContext()
                 .securityContextRepository(securityContextRepository)
             .and()
+
             .csrf()
                 .csrfTokenRepository(csrfTokenRepository)
             .and()
+
             .formLogin()
                 .disable()
+
             .httpBasic()
                 .disable()
+
             .logout()
                 .disable()
+
             .requestCache()
                 .disable()
+
             .authorizeRequests()
+
+                // Available before login.
                 .antMatchers(
                         HttpMethod.GET,
                         "/get-csrf-token")
                     .permitAll()
+
+                // Public authentication/recovery routes.
+                // POST requests still require a valid CSRF token.
                 .antMatchers(
                         HttpMethod.POST,
-                        "/user-login")
+                        "/user-login",
+                        "/auth/login/verify-otp",
+                        "/auth/forgot-password",
+                        "/auth/forgot-password/verify-otp",
+                        "/auth/reset-password",
+                        "/auth/otp/resend")
                     .permitAll()
-                    .antMatchers(
-                            HttpMethod.GET,
-                            "/get-current-user",
-                            "/get-my-access")
-                        .authenticated()
+
+                // Current account/session information.
+                .antMatchers(
+                        HttpMethod.GET,
+                        "/get-current-user",
+                        "/get-my-access")
+                    .authenticated()
+
+                // Existing authenticated operations.
                 .antMatchers(
                         HttpMethod.POST,
                         "/user-logout",
-                        "/change-password")
+                        "/change-password",
+                        "/register-user")
                     .authenticated()
-                    .antMatchers(
-                            HttpMethod.POST,
-                            "/register-user")
-                        .authenticated()
-                        .antMatchers(
-                                HttpMethod.GET,
-                                "/get-user-list")
-                            .authenticated()
-                            .antMatchers(
-                                    HttpMethod.GET,
-                                    "/get-user/*")
-                                .authenticated()
-                               
-                              
+
+                // Existing user list and details.
+                .antMatchers(
+                        HttpMethod.GET,
+                        "/get-user-list",
+                        "/get-user/*")
+                    .authenticated()
+
+                // New Admin read operations.
+                .antMatchers(
+                        HttpMethod.GET,
+                        "/admin/users/*",
+                        "/admin/users/*/permissions")
+                    .authenticated()
+
+                // New Admin update operations.
+                .antMatchers(
+                        HttpMethod.PUT,
+                        "/admin/users/*/profile",
+                        "/admin/users/*/status",
+                        "/admin/users/*/permissions")
+                    .authenticated()
+
+                // New Admin delete/recovery operations.
+                .antMatchers(
+                        HttpMethod.POST,
+                        "/admin/users/*/soft-delete",
+                        "/admin/users/*/password-reset")
+                    .authenticated()
+
                 .anyRequest()
                     .denyAll()
+
             .and()
+
             .exceptionHandling()
+
                 .authenticationEntryPoint(
                     (request, response, exception) ->
                         writeError(
-                            response,
-                            objectMapper,
-                            401,
-                            "Login required"
+                                response,
+                                objectMapper,
+                                401,
+                                "Login required"
                         )
                 )
+
                 .accessDeniedHandler(
                     (request, response, exception) ->
                         writeError(
-                            response,
-                            objectMapper,
-                            403,
-                            "Access denied or invalid CSRF token"
+                                response,
+                                objectMapper,
+                                403,
+                                "Access denied or invalid CSRF token"
                         )
                 );
 
@@ -128,7 +168,8 @@ public class GymSecurityConfig {
                 new GymSessionValidationFilter(
                         userRepository,
                         objectMapper),
-                FilterSecurityInterceptor.class);
+                FilterSecurityInterceptor.class
+        );
 
         return http.build();
     }
@@ -154,6 +195,7 @@ public class GymSecurityConfig {
 
         objectMapper.writeValue(
                 response.getOutputStream(),
-                body);
+                body
+        );
     }
 }

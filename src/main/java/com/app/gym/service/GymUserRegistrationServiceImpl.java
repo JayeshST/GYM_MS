@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.app.gym.admin.GymAdminDao;
 import com.app.gym.audit.GymAuditEventEntity;
 import com.app.gym.audit.repository.GymAuditEventRepository;
 import com.app.gym.common.entity.GymUserEntity;
@@ -36,6 +37,7 @@ public class GymUserRegistrationServiceImpl
     private static final String ASSIGN_USER_ROLE_PERMISSION =
             "CAN-ASSIGN-GYM-USER-ROLE";
 
+    private final GymAdminDao adminDao;
     private final GymUserRepository userRepository;
     private final GymRoleRepository roleRepository;
     private final GymUserRoleRepository userRoleRepository;
@@ -44,6 +46,7 @@ public class GymUserRegistrationServiceImpl
     private final PasswordEncoder passwordEncoder;
 
     public GymUserRegistrationServiceImpl(
+            GymAdminDao adminDao,
             GymUserRepository userRepository,
             GymRoleRepository roleRepository,
             GymUserRoleRepository userRoleRepository,
@@ -51,6 +54,7 @@ public class GymUserRegistrationServiceImpl
             GymAuditEventRepository auditRepository,
             PasswordEncoder passwordEncoder) {
 
+        this.adminDao = adminDao;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
@@ -64,47 +68,64 @@ public class GymUserRegistrationServiceImpl
     public GymRegisterUserResponseDto registerUser(
             GymRegisterUserRequestDto request) {
 
+        adminDao.lockAdministration();
+
         GymUserEntity actor = getValidActor();
 
-        requirePermission(actor.getId(), CREATE_USER_PERMISSION);
-        requirePermission(actor.getId(), ASSIGN_USER_ROLE_PERMISSION);
+        requirePermission(
+                actor.getId(),
+                CREATE_USER_PERMISSION
+        );
+
+        requirePermission(
+                actor.getId(),
+                ASSIGN_USER_ROLE_PERMISSION
+        );
 
         validateRequest(request);
         validatePassword(request);
 
-        String normalizedEmail =
-                request.getEmail().trim().toLowerCase(Locale.ROOT);
+        String normalizedEmail = request.getEmail()
+                .trim()
+                .toLowerCase(Locale.ROOT);
 
-        String roleCode =
-                request.getRoleCode().trim().toUpperCase(Locale.ROOT);
+        String roleCode = request.getRoleCode()
+                .trim()
+                .toUpperCase(Locale.ROOT);
 
-        // This endpoint creates Trainer and Receptionist accounts only.
-        if (!"TRAINER".equals(roleCode)
+        if (!"ADMIN".equals(roleCode)
+                && !"TRAINER".equals(roleCode)
                 && !"RECEPTIONIST".equals(roleCode)) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Role must be TRAINER or RECEPTIONIST");
+                    "Role must be ADMIN, TRAINER or RECEPTIONIST"
+            );
         }
 
         if (userRepository.countUsersByEmail(normalizedEmail) > 0) {
+
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Email is already registered");
+                    "Email is already registered"
+            );
         }
 
         GymRoleEntity role = roleRepository
                 .findByRoleCodeAndIsInactiveAndIsDeleted(
                         roleCode,
                         0,
-                        0)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Requested role is not available"));
+                        0
+                )
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST,
+                                "Requested role is not available"
+                        ));
 
         GymUserEntity user = new GymUserEntity();
 
-        // Internal username; login uses email.
+        // Internal username; authentication uses email.
         user.setUsername("gym_" + UUID.randomUUID());
 
         user.setFullName(request.getFullName().trim());
@@ -113,14 +134,13 @@ public class GymUserRegistrationServiceImpl
         user.setAddress(request.getAddress().trim());
 
         user.setPasswordHash(
-                passwordEncoder.encode(request.getPassword()));
+                passwordEncoder.encode(request.getPassword())
+        );
 
-        // New account is active and not deleted.
-        // These values are controlled by the backend.
         user.setIsInactive(0);
         user.setIsDeleted(0);
 
-        // Password change is required after first login.
+        // First login requires the user to change this password.
         user.setMustChangePassword(1);
         user.setAuthVersion(0L);
 
@@ -134,7 +154,6 @@ public class GymUserRegistrationServiceImpl
         mapping.setUser(user);
         mapping.setRole(role);
 
-        // New role assignment is active and not deleted.
         mapping.setIsInactive(0);
         mapping.setIsDeleted(0);
 
@@ -143,13 +162,13 @@ public class GymUserRegistrationServiceImpl
 
         userRoleRepository.saveAndFlush(mapping);
 
-        // Preserve the existing audit implementation.
-        // roleCode has already been restricted to two fixed values.
+        // roleCode has been restricted to three fixed values.
+        // Passwords and password hashes are excluded from audit data.
         String afterData =
                 "{\"roleCode\":\"" + roleCode + "\","
-                + "\"isInactive\":0,"
-                + "\"isDeleted\":0,"
-                + "\"mustChangePassword\":1}";
+                        + "\"isInactive\":0,"
+                        + "\"isDeleted\":0,"
+                        + "\"mustChangePassword\":1}";
 
         auditRepository.save(
                 GymAuditEventEntity.success(
@@ -159,7 +178,9 @@ public class GymUserRegistrationServiceImpl
                         user.getId(),
                         null,
                         afterData,
-                        "Staff account created and role assigned"));
+                        "Staff account created and role assigned"
+                )
+        );
 
         return new GymRegisterUserResponseDto(
                 user.getId(),
@@ -167,13 +188,15 @@ public class GymUserRegistrationServiceImpl
                 user.getEmail(),
                 role.getRoleCode(),
                 Integer.valueOf(1).equals(
-                        user.getMustChangePassword()));
+                        user.getMustChangePassword())
+        );
     }
 
     private GymUserEntity getValidActor() {
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
         if (authentication == null
                 || !authentication.isAuthenticated()
@@ -182,36 +205,47 @@ public class GymUserRegistrationServiceImpl
 
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "Login required");
+                    "Login required"
+            );
         }
 
         GymAuthenticatedUser principal =
-                (GymAuthenticatedUser) authentication.getPrincipal();
+                (GymAuthenticatedUser)
+                        authentication.getPrincipal();
 
         GymUserEntity actor = userRepository
                 .findById(principal.getUserId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED,
-                        "Session is no longer valid"));
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
+                                "Session is no longer valid"
+                        ));
 
         boolean valid =
                 Integer.valueOf(0).equals(actor.getIsInactive())
-                && Integer.valueOf(0).equals(actor.getIsDeleted())
-                && actor.getAuthVersion() != null
-                && Objects.equals(
-                        actor.getAuthVersion(),
-                        principal.getAuthVersion());
+                        && Integer.valueOf(0).equals(
+                                actor.getIsDeleted())
+                        && actor.getAuthVersion() != null
+                        && Objects.equals(
+                                actor.getAuthVersion(),
+                                principal.getAuthVersion()
+                        );
 
         if (!valid) {
+
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "Session is no longer valid");
+                    "Session is no longer valid"
+            );
         }
 
-        if (!Integer.valueOf(0).equals(actor.getMustChangePassword())) {
+        if (!Integer.valueOf(0).equals(
+                actor.getMustChangePassword())) {
+
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Change your password before registering staff");
+                    "Change your password before registering staff"
+            );
         }
 
         return actor;
@@ -227,30 +261,59 @@ public class GymUserRegistrationServiceImpl
 
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Access not available");
+                    "Access not available"
+            );
         }
     }
 
-    private void validateRequest(GymRegisterUserRequestDto request) {
+    private void validateRequest(
+            GymRegisterUserRequestDto request) {
 
         if (request == null) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Registration details are required");
+                    "Registration details are required"
+            );
         }
 
-        requireText(request.getFullName(), "Full name", 150);
-        requireText(request.getEmail(), "Email", 254);
-        requireText(request.getMobileNumber(), "Mobile number", 20);
-        requireText(request.getAddress(), "Address", 500);
-        requireText(request.getRoleCode(), "Role code", 50);
+        requireText(
+                request.getFullName(),
+                "Full name",
+                150
+        );
+
+        requireText(
+                request.getEmail(),
+                "Email",
+                254
+        );
+
+        requireText(
+                request.getMobileNumber(),
+                "Mobile number",
+                20
+        );
+
+        requireText(
+                request.getAddress(),
+                "Address",
+                500
+        );
+
+        requireText(
+                request.getRoleCode(),
+                "Role code",
+                50
+        );
 
         if (!request.getEmail().trim().matches(
                 "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "A valid email is required");
+                    "A valid email is required"
+            );
         }
 
         if (!request.getMobileNumber().trim().matches(
@@ -258,7 +321,8 @@ public class GymUserRegistrationServiceImpl
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Mobile number must contain 10 to 15 digits");
+                    "Mobile number must contain 10 to 15 digits"
+            );
         }
     }
 
@@ -268,20 +332,25 @@ public class GymUserRegistrationServiceImpl
             int maxLength) {
 
         if (value == null || value.trim().isEmpty()) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    fieldName + " is required");
+                    fieldName + " is required"
+            );
         }
 
         if (value.trim().length() > maxLength) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     fieldName + " must be within "
-                            + maxLength + " characters");
+                            + maxLength + " characters"
+            );
         }
     }
 
-    private void validatePassword(GymRegisterUserRequestDto request) {
+    private void validatePassword(
+            GymRegisterUserRequestDto request) {
 
         String password = request.getPassword();
 
@@ -293,13 +362,16 @@ public class GymUserRegistrationServiceImpl
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Password must contain at least 12 characters "
-                            + "and at most 72 UTF-8 bytes");
+                            + "and at most 72 UTF-8 bytes"
+            );
         }
 
         if (!password.equals(request.getConfirmPassword())) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Password and confirm password do not match");
+                    "Password and confirm password do not match"
+            );
         }
     }
 }
