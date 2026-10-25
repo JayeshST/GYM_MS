@@ -22,6 +22,10 @@
   },
   "/get-user/**": {
     "target": "http://localhost:8080"
-  }
-
+  },
+"/get-my-access": {
+  "target": "http://localhost:8080",
+  "secure": false,
+  "changeOrigin": true
+}
 }

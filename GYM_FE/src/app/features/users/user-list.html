@@ -13,9 +13,11 @@
       </p>
     </div>
 
-    <a routerLink="/users/new" class="add-user-link">
-      + Add user
-    </a>
+   @if (access.canCreateUsers()) {
+  <a routerLink="/users/new" class="add-user-link">
+    + Add user
+  </a>
+}
   </header>
 
   <section class="panel filters" aria-label="Search users">

@@ -17,10 +17,19 @@
         Overview
       </a>
 
-      <a routerLink="/users" class="gym-nav-link">
-        <span aria-hidden="true">☷</span>
-        User management
-      </a>
+      @if (access.canViewUsers()) {
+        <a routerLink="/users" class="gym-nav-link">
+          <span aria-hidden="true">☷</span>
+          User management
+        </a>
+      }
+
+      @if (access.canCreateUsers()) {
+        <a routerLink="/users/new" class="gym-nav-link">
+          <span aria-hidden="true">+</span>
+          Add staff
+        </a>
+      }
 
       <a routerLink="/change-password" class="gym-nav-link">
         <span aria-hidden="true">◇</span>
@@ -48,9 +57,13 @@
 
             <div class="gym-role-row" aria-label="Your active roles">
               @for (role of displayRoles(); track role.roleId) {
-                <span class="gym-role-badge">{{ role.label }}</span>
+                <span class="gym-role-badge">
+                  {{ role.label }}
+                </span>
               } @empty {
-                <span class="gym-muted">No active role assigned</span>
+                <span class="gym-muted">
+                  No active role assigned
+                </span>
               }
             </div>
           </div>
@@ -79,9 +92,32 @@
       }
 
       @if (auth.user(); as user) {
+        @if (access.loading()) {
+          <p class="gym-muted" role="status">
+            Loading your workspace access…
+          </p>
+        }
+
+        @if (access.error()) {
+          <div class="gym-alert" role="alert">
+            <p>{{ access.error() }}</p>
+
+            <button
+              type="button"
+              class="gym-button"
+              [disabled]="access.loading() || busy()"
+              (click)="loadAccess()"
+            >
+              Try again
+            </button>
+          </div>
+        }
+
         <section class="gym-hero" aria-labelledby="welcome-title">
           <div class="gym-hero-content">
-            <span class="gym-hero-pill">YOUR DAILY STARTING POINT</span>
+            <span class="gym-hero-pill">
+              YOUR DAILY STARTING POINT
+            </span>
 
             <h1 id="welcome-title">
               Ready for your<br />
@@ -135,7 +171,9 @@
 
             <div class="gym-role-row gym-summary-roles">
               @for (role of displayRoles(); track role.roleId) {
-                <span class="gym-role-badge">{{ role.label }}</span>
+                <span class="gym-role-badge">
+                  {{ role.label }}
+                </span>
               } @empty {
                 <span>No active role assigned</span>
               }
@@ -173,9 +211,12 @@
 
             <div>
               <dt>Active roles</dt>
+
               <dd class="gym-role-row">
                 @for (role of displayRoles(); track role.roleId) {
-                  <span class="gym-role-badge">{{ role.label }}</span>
+                  <span class="gym-role-badge">
+                    {{ role.label }}
+                  </span>
                 } @empty {
                   <span>No active role assigned</span>
                 }
@@ -198,7 +239,10 @@
         <section class="gym-profile">
           <h2>Account information unavailable</h2>
           <p>Please sign in to open your workspace.</p>
-          <a routerLink="/login" class="gym-hero-link">Go to sign in →</a>
+
+          <a routerLink="/login" class="gym-hero-link">
+            Go to sign in →
+          </a>
         </section>
       }
     </main>

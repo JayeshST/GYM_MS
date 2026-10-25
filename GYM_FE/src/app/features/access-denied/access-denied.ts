@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-access-denied',
@@ -9,12 +9,24 @@ import { RouterLink } from '@angular/router';
     <main class="access-page">
       <section aria-labelledby="access-title">
         <p class="label">GYM MS</p>
-        <h1 id="access-title">Access unavailable</h1>
 
-        <p>
-          You do not have access to this page.
-          Contact your gym administrator if you need access.
-        </p>
+        <h1 id="access-title">
+          {{ verificationFailed
+            ? 'Access could not be verified'
+            : 'Access unavailable' }}
+        </h1>
+
+        @if (verificationFailed) {
+          <p>
+            We could not check your access right now.
+            Return to your dashboard and try again.
+          </p>
+        } @else {
+          <p>
+            You do not have access to this page.
+            Contact your gym administrator if you need access.
+          </p>
+        }
 
         <a routerLink="/dashboard">Back to dashboard</a>
       </section>
@@ -78,4 +90,9 @@ import { RouterLink } from '@angular/router';
     }
   `
 })
-export class AccessDenied {}
+export class AccessDenied {
+  private readonly route = inject(ActivatedRoute);
+
+  readonly verificationFailed =
+    this.route.snapshot.queryParamMap.get('reason') === 'verification';
+}

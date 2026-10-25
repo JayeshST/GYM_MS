@@ -17,7 +17,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
-
+import { AccessService } from '../../core/services/access.service';
 import {
   catchError,
   EMPTY,
@@ -53,6 +53,7 @@ import {
   styleUrl: './user-list.scss'
 })
 export class UserList {
+  readonly access = inject(AccessService);
   private readonly service = inject(UserService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -74,6 +75,7 @@ export class UserList {
       nonNullable: true,
       validators: [
         Validators.maxLength(254)
+        
       ]
     }),
 
@@ -108,7 +110,6 @@ export class UserList {
     page: 0,
     size: 20
   };
-
   constructor() {
     this.requests.pipe(
       startWith(this.appliedQuery),
@@ -296,18 +297,23 @@ export class UserList {
 
     return name;
   }
-
-  private handleError(error: unknown): string {
+private handleError(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
     if (error.status === 401) {
       this.closeDetails();
+      this.access.clear();
+
       void this.router.navigateByUrl('/login');
     } else if (error.status === 403) {
       this.closeDetails();
+      this.access.clear();
+
       void this.router.navigateByUrl('/access-denied');
     }
   }
 
   return userErrorMessage(error);
-}
+
+  }
+
 }
