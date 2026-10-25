@@ -1,139 +1,205 @@
-<div class="workspace-shell">
-  <aside class="sidebar" aria-label="Workspace navigation">
-    <a class="sidebar-brand" routerLink="/dashboard">
-      <span class="brand-icon" aria-hidden="true">G</span>
-      <span>GYM<span class="accent">MS</span></span>
+<div class="gym-workspace">
+  <aside class="gym-sidebar" aria-label="Workspace navigation">
+    <a class="gym-brand" routerLink="/dashboard">
+      <span class="gym-brand-icon" aria-hidden="true">G</span>
+      <span>GYM<span class="gym-accent">MS</span></span>
     </a>
 
-    <p class="nav-heading">WORKSPACE</p>
+    <p class="gym-nav-heading">WORKSPACE</p>
 
-    <nav aria-label="Main navigation">
+    <nav class="gym-nav" aria-label="Main navigation">
       <a
         routerLink="/dashboard"
-        class="nav-item active"
+        class="gym-nav-link gym-nav-current"
         aria-current="page"
       >
-        <span class="nav-symbol" aria-hidden="true">▦</span>
+        <span aria-hidden="true">▦</span>
         Overview
       </a>
 
-      <a routerLink="/change-password" class="nav-item">
-        <span class="nav-symbol" aria-hidden="true">◇</span>
+      <a routerLink="/users" class="gym-nav-link">
+        <span aria-hidden="true">☷</span>
+        User management
+      </a>
+
+      <a routerLink="/change-password" class="gym-nav-link">
+        <span aria-hidden="true">◇</span>
         Change password
       </a>
     </nav>
 
-    <div class="sidebar-bottom">
-      <p>Keep moving forward.</p>
-      <span>One good day at a time.</span>
+    <div class="gym-sidebar-note">
+      <span class="gym-accent">SHOW UP. KEEP GOING.</span>
+      <p>Small steps. Stronger every day.</p>
     </div>
   </aside>
 
-  <div class="workspace-main">
-    <header class="topbar">
-      <div>
-        <span class="topbar-caption">YOUR WORKSPACE</span>
+  <div class="gym-main">
+    <header class="gym-topbar">
+      <div class="gym-topbar-title">
+        <span class="gym-caption">YOUR WORKSPACE</span>
         <strong>Overview</strong>
       </div>
 
-      <div class="actions">
+      <div class="gym-topbar-actions">
         @if (auth.user(); as user) {
-          <span class="user-name">{{ user.fullName }}</span>
+          <div class="gym-user-identity">
+            <strong>{{ user.fullName }}</strong>
 
-          <span class="avatar" aria-hidden="true">
-            {{ user.fullName.slice(0, 1).toUpperCase() }}
+            <div class="gym-role-row" aria-label="Your active roles">
+              @for (role of displayRoles(); track role.roleId) {
+                <span class="gym-role-badge">{{ role.label }}</span>
+              } @empty {
+                <span class="gym-muted">No active role assigned</span>
+              }
+            </div>
+          </div>
+
+          <span class="gym-avatar" aria-hidden="true">
+            {{ initials() }}
           </span>
         }
 
         <button
           type="button"
-          class="secondary"
+          class="gym-button"
           [disabled]="busy()"
           (click)="logout()"
         >
-          {{ busy() ? 'Signing out...' : 'Sign out' }}
+          {{ busy() ? 'Signing out…' : 'Sign out' }}
         </button>
       </div>
     </header>
 
-    <main class="dashboard-content">
+    <main class="gym-content">
       @if (error()) {
-        <div class="alert error" role="alert">{{ error() }}</div>
+        <div class="gym-alert" role="alert">
+          {{ error() }}
+        </div>
       }
 
       @if (auth.user(); as user) {
-        <section class="dashboard-hero" aria-labelledby="welcome-title">
-          <div class="hero-content">
-            <span class="hero-pill">YOUR DAILY STARTING POINT</span>
+        <section class="gym-hero" aria-labelledby="welcome-title">
+          <div class="gym-hero-content">
+            <span class="gym-hero-pill">YOUR DAILY STARTING POINT</span>
 
             <h1 id="welcome-title">
-              Let's get moving,<br />
-              <span class="accent">{{ user.fullName }}.</span>
+              Ready for your<br />
+              <span class="gym-accent">next strong day?</span>
             </h1>
 
             <p>
-              Your account and workspace, together in one place.
+              Welcome back, {{ firstName() }}.
+              Your gym workspace starts here.
             </p>
 
-            <a routerLink="/change-password" class="hero-link">
-              Manage your password <span aria-hidden="true">↗</span>
+            <div class="gym-role-row" aria-label="Signed-in roles">
+              @for (role of displayRoles(); track role.roleId) {
+                <span class="gym-role-badge gym-role-hero">
+                  {{ role.label }}
+                </span>
+              } @empty {
+                <span class="gym-role-badge">
+                  No active role assigned
+                </span>
+              }
+            </div>
+
+            <a routerLink="/change-password" class="gym-hero-link">
+              Manage your password
+              <span aria-hidden="true">↗</span>
             </a>
           </div>
         </section>
 
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">PERSONAL WORKSPACE</p>
-            <h2>Your account at a glance</h2>
-          </div>
+        <div class="gym-section-heading">
+          <p class="gym-caption">PERSONAL WORKSPACE</p>
+          <h2>Your account at a glance</h2>
         </div>
 
-        <section class="summary-grid" aria-label="Account summary">
-          <article class="summary-card">
-            <span class="card-kicker">ACCOUNT</span>
+        <section class="gym-summary-grid" aria-label="Account summary">
+          <article class="gym-summary-card">
+            <span class="gym-caption">ACCOUNT</span>
             <h3>{{ user.fullName }}</h3>
             <p>Your registered name</p>
           </article>
 
-          <article class="summary-card">
-            <span class="card-kicker">CONTACT</span>
-            <h3 class="email-value">{{ user.email }}</h3>
+          <article class="gym-summary-card">
+            <span class="gym-caption">CONTACT</span>
+            <h3 class="gym-email">{{ user.email }}</h3>
             <p>Your sign-in email address</p>
           </article>
 
-          <article class="summary-card accent-card">
-            <span class="card-kicker">USER ID</span>
-            <h3>#{{ user.userId }}</h3>
-            <p>Your unique account reference</p>
+          <article class="gym-summary-card gym-summary-highlight">
+            <span class="gym-caption">YOUR ROLES</span>
+
+            <div class="gym-role-row gym-summary-roles">
+              @for (role of displayRoles(); track role.roleId) {
+                <span class="gym-role-badge">{{ role.label }}</span>
+              } @empty {
+                <span>No active role assigned</span>
+              }
+            </div>
+
+            <p>Your current gym responsibilities</p>
           </article>
         </section>
 
-        <section class="account-card" aria-labelledby="profile-title">
-          <div class="account-heading">
+        <section class="gym-profile" aria-labelledby="profile-title">
+          <div class="gym-profile-heading">
             <div>
-              <p class="eyebrow">PROFILE</p>
+              <p class="gym-caption">PROFILE</p>
               <h2 id="profile-title">Account details</h2>
             </div>
 
-            <span class="profile-tag">My account</span>
+            <span class="gym-profile-tag">My account</span>
           </div>
 
-          <dl>
-            <dt>Full name</dt>
-            <dd>{{ user.fullName }}</dd>
+          <dl class="gym-profile-grid">
+            <div>
+              <dt>Full name</dt>
+              <dd>{{ user.fullName }}</dd>
+            </div>
 
-            <dt>Email address</dt>
-            <dd>{{ user.email }}</dd>
+            <div>
+              <dt>Email address</dt>
+              <dd>{{ user.email }}</dd>
+            </div>
 
-            <dt>User ID</dt>
-            <dd>{{ user.userId }}</dd>
+            <div>
+              <dt>User ID</dt>
+              <dd>#{{ user.userId }}</dd>
+            </div>
+
+            <div>
+              <dt>Active roles</dt>
+              <dd class="gym-role-row">
+                @for (role of displayRoles(); track role.roleId) {
+                  <span class="gym-role-badge">{{ role.label }}</span>
+                } @empty {
+                  <span>No active role assigned</span>
+                }
+              </dd>
+            </div>
           </dl>
+
+          @if (displayRoles().length === 0) {
+            <p class="gym-profile-note">
+              Contact your gym administrator to assign a role to your account.
+            </p>
+          }
         </section>
 
-        <footer class="dashboard-footer">
+        <footer class="gym-footer">
           <span>GYM MS · Your everyday workspace</span>
           <a routerLink="/change-password">Account settings →</a>
         </footer>
+      } @else {
+        <section class="gym-profile">
+          <h2>Account information unavailable</h2>
+          <p>Please sign in to open your workspace.</p>
+          <a routerLink="/login" class="gym-hero-link">Go to sign in →</a>
+        </section>
       }
     </main>
   </div>

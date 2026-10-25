@@ -21,11 +21,57 @@ export class AuthService {
   readonly user = this.userState.asReadonly();
 
   private requirePayload<T>(response: ApiResponse<T>): T {
-    if (!response.success || response.payload === null) {
+    if (
+      !response ||
+      response.success !== true ||
+      response.payload == null
+    ) {
       throw new Error('Invalid API response');
     }
 
     return response.payload;
+  }
+
+  private readCurrentUser(
+    response: ApiResponse<CurrentUser>
+  ): CurrentUser {
+    const user = this.requirePayload(response);
+
+    if (
+      !Number.isSafeInteger(user.userId) ||
+      user.userId <= 0 ||
+      typeof user.fullName !== 'string' ||
+      typeof user.email !== 'string' ||
+      typeof user.mustChangePassword !== 'boolean' ||
+      !Array.isArray(user.roles)
+    ) {
+      throw new Error('Invalid current user response');
+    }
+
+    const validRoles = user.roles.every(role =>
+      role != null &&
+      Number.isSafeInteger(role.roleId) &&
+      role.roleId > 0 &&
+      typeof role.roleCode === 'string' &&
+      role.roleCode.trim().length > 0 &&
+      typeof role.roleName === 'string'
+    );
+
+    if (!validRoles) {
+      throw new Error('Invalid user roles response');
+    }
+
+    return {
+      userId: user.userId,
+      fullName: user.fullName,
+      email: user.email,
+      mustChangePassword: user.mustChangePassword,
+      roles: user.roles.map(role => ({
+        roleId: role.roleId,
+        roleCode: role.roleCode,
+        roleName: role.roleName
+      }))
+    };
   }
 
   async restoreSession(): Promise<CurrentUser> {
@@ -35,7 +81,7 @@ export class AuthService {
       })
     );
 
-    const user = this.requirePayload(response);
+    const user = this.readCurrentUser(response);
     this.userState.set(user);
 
     return user;
@@ -50,12 +96,16 @@ export class AuthService {
 
     const csrf = this.requirePayload(response);
 
-    if (csrf.headerName !== 'X-XSRF-TOKEN' || !csrf.token) {
+    if (
+      csrf.headerName !== 'X-XSRF-TOKEN' ||
+      typeof csrf.token !== 'string' ||
+      !csrf.token
+    ) {
       throw new Error('Invalid CSRF response');
     }
 
     return new HttpHeaders({
-      [csrf.headerName]: csrf.token
+      'X-XSRF-TOKEN': csrf.token
     });
   }
 
@@ -76,7 +126,7 @@ export class AuthService {
       )
     );
 
-    const user = this.requirePayload(response);
+    const user = this.readCurrentUser(response);
     this.userState.set(user);
 
     return user;
@@ -96,11 +146,10 @@ export class AuthService {
       )
     );
 
-    if (!response.success) {
+    if (!response || response.success !== true) {
       throw new Error('Password change failed');
     }
 
-    // Backend invalidates the session after a successful password change.
     this.clearSession();
   }
 
@@ -118,7 +167,7 @@ export class AuthService {
       )
     );
 
-    if (!response.success) {
+    if (!response || response.success !== true) {
       throw new Error('Logout failed');
     }
 

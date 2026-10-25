@@ -1,0 +1,395 @@
+<main class="users-page">
+  <header class="page-header">
+    <div>
+      <a routerLink="/dashboard" class="back-link">
+        ← Dashboard
+      </a>
+
+      <p class="eyebrow">GYM MS / TEAM</p>
+      <h1>User management</h1>
+
+      <p class="subtitle">
+        Find your team members and view their account details.
+      </p>
+    </div>
+
+    <a routerLink="/users/new" class="add-user-link">
+      + Add user
+    </a>
+  </header>
+
+  <section class="panel filters" aria-label="Search users">
+    <form [formGroup]="form" (ngSubmit)="search()">
+      <div class="field search-field">
+        <label for="user-search">Search users</label>
+
+        <input
+          id="user-search"
+          type="search"
+          formControlName="search"
+          maxlength="254"
+          placeholder="Name or email"
+          aria-describedby="search-help search-error"
+          [attr.aria-invalid]="
+            form.controls.search.touched &&
+            form.controls.search.invalid
+          "
+        />
+
+        <small id="search-help">
+          Enter a name or email, then select Search.
+        </small>
+
+        <small id="search-error" class="error-text">
+          @if (
+            form.controls.search.touched &&
+            form.controls.search.hasError('maxlength')
+          ) {
+            Search must be within 254 characters.
+          }
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="user-status">Account status</label>
+
+        <select
+          id="user-status"
+          formControlName="isInactive"
+        >
+          <option value="">All statuses</option>
+          <option value="0">Active</option>
+          <option value="1">Inactive</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="deleted-status">Records</label>
+
+        <select
+          id="deleted-status"
+          formControlName="isDeleted"
+        >
+          <option value="0">Not deleted</option>
+          <option value="1">Deleted only</option>
+          <option value="">All records</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="page-size">Users per page</label>
+
+        <select
+          id="page-size"
+          formControlName="size"
+          aria-describedby="page-size-error"
+        >
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="20">20</option>
+          <option [ngValue]="50">50</option>
+          <option [ngValue]="100">100</option>
+        </select>
+
+        <small id="page-size-error" class="error-text">
+          @if (
+            form.controls.size.touched &&
+            form.controls.size.invalid
+          ) {
+            Select a valid page size.
+          }
+        </small>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="primary"
+          [disabled]="loading() || form.invalid"
+        >
+          {{ loading() ? 'Loading…' : 'Search' }}
+        </button>
+
+        <button
+          type="button"
+          (click)="reset()"
+          [disabled]="loading()"
+        >
+          Reset
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section
+    class="panel results"
+    aria-labelledby="users-heading"
+    [attr.aria-busy]="loading()"
+  >
+    <div class="section-heading">
+      <h2 id="users-heading">Team members</h2>
+
+      @if (pageData(); as page) {
+        <span>
+          {{ page.totalElements }}
+          {{ page.totalElements === 1 ? 'user found' : 'users found' }}
+        </span>
+      }
+    </div>
+
+    @if (loading()) {
+      <div class="empty-state" role="status">
+        Loading users…
+      </div>
+    } @else if (error()) {
+      <div class="empty-state">
+        <p class="error-text" role="alert">
+          {{ error() }}
+        </p>
+
+        <button type="button" (click)="reload()">
+          Try again
+        </button>
+      </div>
+    } @else if (pageData(); as page) {
+      @if (page.users.length === 0) {
+        <div class="empty-state" role="status">
+          <h3>No users found</h3>
+          <p>Try another search or reset the filters.</p>
+        </div>
+      } @else {
+        <div
+          class="table-scroll"
+          tabindex="0"
+          role="region"
+          aria-label="Users table"
+        >
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">User</th>
+                <th scope="col">Mobile</th>
+                <th scope="col">Roles</th>
+                <th scope="col">Status</th>
+                <th scope="col">Created</th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (user of page.users; track user.userId) {
+                <tr>
+                  <td>
+                    <strong>{{ user.fullName }}</strong>
+
+                    <span class="secondary-text">
+                      {{ user.email }}
+                    </span>
+                  </td>
+
+                  <td>
+                    {{ user.mobileNumber || '—' }}
+                  </td>
+
+                  <td>
+                    <div class="role-list">
+                      @for (role of user.roles; track $index) {
+                        <span
+                          class="role-chip"
+                          [class.role-inactive]="
+                            role.isInactive === 1 ||
+                            role.mappingIsInactive === 1
+                          "
+                        >
+                          {{ roleLabel(role) }}
+                        </span>
+                      } @empty {
+                        <span class="secondary-text">
+                          No roles assigned
+                        </span>
+                      }
+                    </div>
+                  </td>
+
+                  <td>
+                    <span
+                      class="status"
+                      [class.active]="
+                        user.isDeleted === 0 &&
+                        user.isInactive === 0
+                      "
+                      [class.inactive]="
+                        user.isDeleted === 0 &&
+                        user.isInactive === 1
+                      "
+                      [class.deleted]="user.isDeleted === 1"
+                    >
+                      {{ statusLabel(user) }}
+                    </span>
+                  </td>
+
+                  <td>
+                    {{ (user.createdAt | date:'dd MMM yyyy') || '—' }}
+                  </td>
+
+                  <td>
+                    <button
+                      type="button"
+                      (click)="viewDetails(user.userId)"
+                      [attr.aria-label]="
+                        'View details for ' + user.fullName
+                      "
+                      aria-controls="user-details"
+                    >
+                      Details
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <footer class="pagination">
+        <span>
+          Page {{ page.totalPages === 0 ? 0 : page.page + 1 }}
+          of {{ page.totalPages }}
+        </span>
+
+        <div>
+          <button
+            type="button"
+            [disabled]="!page.hasPrevious || loading()"
+            (click)="changePage(page.page - 1)"
+          >
+            ← Previous
+          </button>
+
+          <button
+            type="button"
+            [disabled]="!page.hasNext || loading()"
+            (click)="changePage(page.page + 1)"
+          >
+            Next →
+          </button>
+        </div>
+      </footer>
+    }
+  </section>
+
+  @if (detailOpen()) {
+    <section
+      id="user-details"
+      class="panel details"
+      aria-labelledby="details-title"
+      [attr.aria-busy]="detailLoading()"
+    >
+      <div class="section-heading">
+        <h2 id="details-title">User details</h2>
+
+        <button
+          type="button"
+          (click)="closeDetails()"
+          aria-label="Close user details"
+        >
+          Close
+        </button>
+      </div>
+
+      @if (detailLoading()) {
+        <p role="status">Loading details…</p>
+      } @else if (detailError()) {
+        <p class="error-text" role="alert">
+          {{ detailError() }}
+        </p>
+      } @else if (selectedUser(); as user) {
+        <dl class="detail-grid">
+          <div>
+            <dt>User ID</dt>
+            <dd>{{ user.userId }}</dd>
+          </div>
+
+          <div>
+            <dt>Full name</dt>
+            <dd>{{ user.fullName }}</dd>
+          </div>
+
+          <div>
+            <dt>Email</dt>
+            <dd>{{ user.email }}</dd>
+          </div>
+
+          <div>
+            <dt>Mobile</dt>
+            <dd>{{ user.mobileNumber || '—' }}</dd>
+          </div>
+
+          <div>
+            <dt>Status</dt>
+            <dd>
+              <span
+                class="status"
+                [class.active]="
+                  user.isDeleted === 0 &&
+                  user.isInactive === 0
+                "
+                [class.inactive]="
+                  user.isDeleted === 0 &&
+                  user.isInactive === 1
+                "
+                [class.deleted]="user.isDeleted === 1"
+              >
+                {{ statusLabel(user) }}
+              </span>
+            </dd>
+          </div>
+
+          <div>
+            <dt>Roles</dt>
+
+            <dd class="role-list">
+              @for (role of user.roles; track $index) {
+                <span
+                  class="role-chip"
+                  [class.role-inactive]="
+                    role.isInactive === 1 ||
+                    role.mappingIsInactive === 1
+                  "
+                >
+                  {{ roleLabel(role) }}
+                </span>
+              } @empty {
+                <span>No roles assigned</span>
+              }
+            </dd>
+          </div>
+
+          <div>
+            <dt>Address</dt>
+            <dd>{{ user.address || '—' }}</dd>
+          </div>
+
+          <div>
+            <dt>Created</dt>
+            <dd>
+              {{
+                (user.createdAt | date:'dd MMM yyyy, hh:mm a')
+                || '—'
+              }}
+            </dd>
+          </div>
+
+          <div>
+            <dt>Updated</dt>
+            <dd>
+              {{
+                (user.updatedAt | date:'dd MMM yyyy, hh:mm a')
+                || '—'
+              }}
+            </dd>
+          </div>
+        </dl>
+      }
+    </section>
+  }
+</main>

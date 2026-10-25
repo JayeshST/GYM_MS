@@ -1,0 +1,241 @@
+<main class="register-page">
+  <a routerLink="/users" class="back-link">← User management</a>
+
+  <header>
+    <p class="eyebrow">GYM MS / TEAM</p>
+    <h1>Add a Team Member</h1>
+    <p class="subtitle">
+      Create a Trainer or Receptionist account for your gym.
+    </p>
+  </header>
+
+  @if (createdUser(); as user) {
+    <section class="card success-card" aria-labelledby="success-title">
+      <p class="success-label" role="status">
+        Account created successfully
+      </p>
+
+      <h2 id="success-title">{{ user.fullName }}</h2>
+
+      <dl>
+        <div>
+          <dt>User ID</dt>
+          <dd>{{ user.userId }}</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd>{{ user.email }}</dd>
+        </div>
+        <div>
+          <dt>Role</dt>
+          <dd>{{ user.roleCode }}</dd>
+        </div>
+      </dl>
+
+      @if (user.mustChangePassword) {
+        <p class="note">
+          This user must change their temporary password after signing in.
+        </p>
+      }
+
+      <div class="actions">
+        <a routerLink="/users" class="button primary">View users</a>
+        <button type="button" (click)="addAnother()">
+          Add another user
+        </button>
+      </div>
+    </section>
+  } @else {
+    <section class="card">
+      <div class="card-heading">
+        <h2>Account information</h2>
+        <p>All fields are required.</p>
+      </div>
+
+      @if (error()) {
+        <div class="error-banner" role="alert">
+          {{ error() }}
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <fieldset [disabled]="busy()">
+          <legend class="visually-hidden">New staff account</legend>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="full-name">Full name</label>
+              <input
+                id="full-name"
+                type="text"
+                formControlName="fullName"
+                maxlength="150"
+                autocomplete="off"
+                aria-describedby="name-error"
+                [attr.aria-invalid]="invalid(form.controls.fullName)"
+              />
+              <small id="name-error" class="field-error">
+                @if (invalid(form.controls.fullName)) {
+                  Enter a full name within 150 characters.
+                }
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="staff-role">Role</label>
+              <select
+                id="staff-role"
+                formControlName="roleCode"
+                aria-describedby="role-error"
+                [attr.aria-invalid]="invalid(form.controls.roleCode)"
+              >
+                <option value="">Select a role</option>
+                <option value="TRAINER">Trainer</option>
+                <option value="RECEPTIONIST">Receptionist</option>
+              </select>
+              <small id="role-error" class="field-error">
+                @if (invalid(form.controls.roleCode)) {
+                  Select Trainer or Receptionist.
+                }
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="staff-email">Email</label>
+              <input
+                id="staff-email"
+                type="email"
+                formControlName="email"
+                maxlength="254"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                aria-describedby="email-help email-error"
+                [attr.aria-invalid]="invalid(form.controls.email)"
+              />
+              <small id="email-help">
+                The user will sign in with this email.
+              </small>
+              <small id="email-error" class="field-error">
+                @if (invalid(form.controls.email)) {
+                  Enter a valid email within 254 characters.
+                }
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="staff-mobile">Mobile number</label>
+              <input
+                id="staff-mobile"
+                type="tel"
+                formControlName="mobileNumber"
+                maxlength="16"
+                autocomplete="off"
+                placeholder="+919876543210"
+                aria-describedby="mobile-help mobile-error"
+                [attr.aria-invalid]="invalid(form.controls.mobileNumber)"
+              />
+              <small id="mobile-help">
+                10–15 digits; optional + prefix, without spaces.
+              </small>
+              <small id="mobile-error" class="field-error">
+                @if (invalid(form.controls.mobileNumber)) {
+                  Enter a valid mobile number.
+                }
+              </small>
+            </div>
+
+            <div class="field full-width">
+              <label for="staff-address">Address</label>
+              <textarea
+                id="staff-address"
+                formControlName="address"
+                maxlength="500"
+                rows="3"
+                autocomplete="off"
+                aria-describedby="address-error"
+                [attr.aria-invalid]="invalid(form.controls.address)"
+              ></textarea>
+              <small id="address-error" class="field-error">
+                @if (invalid(form.controls.address)) {
+                  Enter an address within 500 characters.
+                }
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="staff-password">Temporary password</label>
+              <input
+                id="staff-password"
+                type="password"
+                formControlName="password"
+                maxlength="72"
+                autocomplete="new-password"
+                aria-describedby="password-help password-error"
+                [attr.aria-invalid]="invalid(form.controls.password)"
+              />
+              <small id="password-help">
+                At least 12 characters, at most 72 UTF-8 bytes.
+                Spaces alone are not allowed.
+              </small>
+              <small id="password-error" class="field-error">
+                @if (invalid(form.controls.password)) {
+                  Enter a password meeting these rules.
+                  Non-English characters can use multiple bytes.
+                }
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="staff-confirm-password">Confirm password</label>
+              <input
+                id="staff-confirm-password"
+                type="password"
+                formControlName="confirmPassword"
+                maxlength="72"
+                autocomplete="new-password"
+                aria-describedby="confirm-error"
+                [attr.aria-invalid]="
+                  invalid(form.controls.confirmPassword) ||
+                  (form.controls.confirmPassword.touched &&
+                   form.hasError('passwordMismatch'))
+                "
+              />
+              <small id="confirm-error" class="field-error">
+                @if (invalid(form.controls.confirmPassword)) {
+                  Confirm the temporary password.
+                } @else if (
+                  form.controls.confirmPassword.touched &&
+                  form.hasError('passwordMismatch')
+                ) {
+                  Passwords do not match.
+                }
+              </small>
+            </div>
+          </div>
+
+          <p class="note">
+            The new user must change their password after signing in.
+            Share the temporary password through a secure channel.
+          </p>
+
+          <div class="actions">
+            <button type="submit" class="primary" [disabled]="busy()">
+              {{ busy() ? 'Creating account…' : 'Create account' }}
+            </button>
+
+            @if (!busy()) {
+              <a routerLink="/users" class="button">Cancel</a>
+            }
+          </div>
+        </fieldset>
+
+        @if (busy()) {
+          <p role="status" class="subtitle">
+            Please wait while the account is created.
+          </p>
+        }
+      </form>
+    </section>
+  }
+</main>

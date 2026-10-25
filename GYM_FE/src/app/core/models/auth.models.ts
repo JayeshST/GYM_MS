@@ -11,11 +11,18 @@ export interface CsrfToken {
   token: string;
 }
 
+export interface CurrentUserRole {
+  roleId: number;
+  roleCode: string;
+  roleName: string;
+}
+
 export interface CurrentUser {
   userId: number;
   fullName: string;
   email: string;
   mustChangePassword: boolean;
+  roles: CurrentUserRole[];
 }
 
 export interface LoginRequest {

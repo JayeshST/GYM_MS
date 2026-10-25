@@ -3,6 +3,7 @@ import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
+    
     path: '',
     pathMatch: 'full',
     redirectTo: 'dashboard'
@@ -30,7 +31,40 @@ export const routes: Routes = [
     import('./features/auth/dashboard/dashboard')
       .then((m) => m.Dashboard)
 },
+
+
+{
+  path: 'users',
+  title: 'User management | Gym MS',
+  canActivate: [authGuard],
+  loadComponent: () =>
+    import('./features/users/user-list')
+      .then(component => component.UserList)
+},
+
+
+
+
+{
+  path: 'users/new',
+  title: 'Register user | Gym MS',
+  canActivate: [authGuard],
+  loadComponent: () =>
+    import('./features/users/user-register')
+      .then(component => component.UserRegister)
+},
+
+
+{
+  path: 'access-denied',
+  title: 'Access unavailable | Gym MS',
+  canActivate: [authGuard],
+  loadComponent: () =>
+    import('./features/access-denied/access-denied')
+      .then(component => component.AccessDenied)
+},
   {
+    
     path: '**',
     redirectTo: 'dashboard'
   }
