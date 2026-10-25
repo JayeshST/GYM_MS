@@ -77,10 +77,11 @@ public class GymSecurityConfig {
                         HttpMethod.POST,
                         "/user-login")
                     .permitAll()
-                .antMatchers(
-                        HttpMethod.GET,
-                        "/get-current-user")
-                    .authenticated()
+                    .antMatchers(
+                            HttpMethod.GET,
+                            "/get-current-user",
+                            "/get-my-access")
+                        .authenticated()
                 .antMatchers(
                         HttpMethod.POST,
                         "/user-logout",

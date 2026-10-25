@@ -1,5 +1,8 @@
 package com.app.gym.dao;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,5 +36,14 @@ public class GymAuthorizationDao {
                         permissionCode);
 
         return permissionCount > 0;
+    }
+    @Transactional(readOnly = true)
+    public List<String> getActivePermissionCodes(Long userId) {
+
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        return authorizationRepository.findActivePermissionCodes(userId);
     }
 }
