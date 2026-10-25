@@ -1,6 +1,9 @@
 package com.app.gym.dto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class GymUserDetailsResponseDto {
 
@@ -9,9 +12,13 @@ public class GymUserDetailsResponseDto {
     private final String email;
     private final String mobileNumber;
     private final String address;
-    private final Integer isActive;
+    private final Integer isInactive;
+    private final Integer isDeleted;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
+
+    private List<GymUserRoleSummaryDto> roles =
+            Collections.emptyList();
 
     public GymUserDetailsResponseDto(
             Long userId,
@@ -19,7 +26,8 @@ public class GymUserDetailsResponseDto {
             String email,
             String mobileNumber,
             String address,
-            Integer isActive,
+            Integer isInactive,
+            Integer isDeleted,
             LocalDateTime createdAt,
             LocalDateTime updatedAt) {
 
@@ -28,7 +36,8 @@ public class GymUserDetailsResponseDto {
         this.email = email;
         this.mobileNumber = mobileNumber;
         this.address = address;
-        this.isActive = isActive;
+        this.isInactive = isInactive;
+        this.isDeleted = isDeleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -53,8 +62,12 @@ public class GymUserDetailsResponseDto {
         return address;
     }
 
-    public Integer getIsActive() {
-        return isActive;
+    public Integer getIsInactive() {
+        return isInactive;
+    }
+
+    public Integer getIsDeleted() {
+        return isDeleted;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -63,5 +76,14 @@ public class GymUserDetailsResponseDto {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public List<GymUserRoleSummaryDto> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<GymUserRoleSummaryDto> roles) {
+        this.roles = Collections.unmodifiableList(
+                new ArrayList<>(roles));
     }
 }

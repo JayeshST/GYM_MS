@@ -1,3 +1,4 @@
+
 package com.app.gym.service;
 
 import java.util.Locale;
@@ -40,7 +41,7 @@ public class GymUserDetailsService implements UserDetailsService {
                         "Invalid email or password"));
 
         boolean enabled =
-                Integer.valueOf(1).equals(user.getIsActive())
+        		Integer.valueOf(0).equals(user.getIsInactive())
                 && Integer.valueOf(0).equals(user.getIsDeleted());
 
         return new GymAuthenticatedUser(

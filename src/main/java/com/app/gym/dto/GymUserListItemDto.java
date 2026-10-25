@@ -1,6 +1,9 @@
 package com.app.gym.dto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class GymUserListItemDto {
 
@@ -8,22 +11,28 @@ public class GymUserListItemDto {
     private final String fullName;
     private final String email;
     private final String mobileNumber;
-    private final Integer isActive;
+    private final Integer isInactive;
+    private final Integer isDeleted;
     private final LocalDateTime createdAt;
+
+    private List<GymUserRoleSummaryDto> roles =
+            Collections.emptyList();
 
     public GymUserListItemDto(
             Long userId,
             String fullName,
             String email,
             String mobileNumber,
-            Integer isActive,
+            Integer isInactive,
+            Integer isDeleted,
             LocalDateTime createdAt) {
 
         this.userId = userId;
         this.fullName = fullName;
         this.email = email;
         this.mobileNumber = mobileNumber;
-        this.isActive = isActive;
+        this.isInactive = isInactive;
+        this.isDeleted = isDeleted;
         this.createdAt = createdAt;
     }
 
@@ -43,11 +52,24 @@ public class GymUserListItemDto {
         return mobileNumber;
     }
 
-    public Integer getIsActive() {
-        return isActive;
+    public Integer getIsInactive() {
+        return isInactive;
+    }
+
+    public Integer getIsDeleted() {
+        return isDeleted;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public List<GymUserRoleSummaryDto> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<GymUserRoleSummaryDto> roles) {
+        this.roles = Collections.unmodifiableList(
+                new ArrayList<>(roles));
     }
 }

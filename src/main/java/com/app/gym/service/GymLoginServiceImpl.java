@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import com.app.gym.common.entity.GymUserEntity;
 import com.app.gym.config.GymAuthenticatedUser;
+import com.app.gym.dao.GymCurrentUserRoleDao;
 import com.app.gym.dto.GymLoginRequestDto;
 import com.app.gym.dto.GymLoginResponseDto;
 import com.app.gym.user.repository.GymUserRepository;
@@ -35,6 +36,7 @@ public class GymLoginServiceImpl implements GymLoginService {
     private final GymLoginAuditService auditService;
     private final HttpSessionCsrfTokenRepository csrfTokenRepository;
     private final HttpSessionSecurityContextRepository securityContextRepository;
+    private final GymCurrentUserRoleDao currentUserRoleDao;
 
     private final ChangeSessionIdAuthenticationStrategy sessionStrategy =
             new ChangeSessionIdAuthenticationStrategy();
@@ -45,13 +47,15 @@ public class GymLoginServiceImpl implements GymLoginService {
             GymUserRepository userRepository,
             GymLoginAuditService auditService,
             HttpSessionCsrfTokenRepository csrfTokenRepository,
-            HttpSessionSecurityContextRepository securityContextRepository) {
+            HttpSessionSecurityContextRepository securityContextRepository,
+            GymCurrentUserRoleDao currentUserRoleDao) {
 
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.auditService = auditService;
         this.csrfTokenRepository = csrfTokenRepository;
         this.securityContextRepository = securityContextRepository;
+        this.currentUserRoleDao = currentUserRoleDao;
     }
 
     @Override
@@ -77,7 +81,8 @@ public class GymLoginServiceImpl implements GymLoginService {
                     authenticationManager.authenticate(credentials);
 
             GymAuthenticatedUser principal =
-                    (GymAuthenticatedUser) authentication.getPrincipal();
+                    (GymAuthenticatedUser)
+                            authentication.getPrincipal();
 
             user = findValidUser(principal);
 
@@ -86,23 +91,23 @@ public class GymLoginServiceImpl implements GymLoginService {
             clearSession(request);
             auditService.recordLoginFailure();
 
-            // Same outward message for unknown, disabled,
-            // deleted accounts and incorrect passwords.
             throw new BadCredentialsException(
                     "Invalid email or password");
         }
 
         try {
-            // CSRF request normally created this session already.
+            // Prepare the complete response before recording success.
+            GymLoginResponseDto payload = toResponse(user);
+
             request.getSession(true);
 
-            // Protect against session fixation.
+            // Rotate the session ID after authentication.
             sessionStrategy.onAuthentication(
                     authentication,
                     request,
                     response);
 
-            // The pre-login CSRF token must no longer be reused.
+            // Discard the pre-login CSRF token.
             csrfTokenRepository.saveToken(
                     null,
                     request,
@@ -112,7 +117,6 @@ public class GymLoginServiceImpl implements GymLoginService {
                     SecurityContextHolder.createEmptyContext();
 
             context.setAuthentication(authentication);
-
             SecurityContextHolder.setContext(context);
 
             securityContextRepository.saveContext(
@@ -122,11 +126,11 @@ public class GymLoginServiceImpl implements GymLoginService {
 
             auditService.recordLoginSuccess(user.getId());
 
-            return toResponse(user);
+            return payload;
 
         } catch (RuntimeException exception) {
 
-            // Do not retain authenticated access when setup fails.
+            // Do not leave an authenticated session after setup failure.
             clearSession(request);
             throw exception;
         }
@@ -137,7 +141,8 @@ public class GymLoginServiceImpl implements GymLoginService {
             HttpServletRequest request) {
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
         if (authentication == null
                 || !authentication.isAuthenticated()
@@ -151,10 +156,14 @@ public class GymLoginServiceImpl implements GymLoginService {
         }
 
         GymAuthenticatedUser principal =
-                (GymAuthenticatedUser) authentication.getPrincipal();
+                (GymAuthenticatedUser)
+                        authentication.getPrincipal();
 
         try {
-            return toResponse(findValidUser(principal));
+            GymUserEntity user = findValidUser(principal);
+
+            // Read current active roles from the database.
+            return toResponse(user);
 
         } catch (AuthenticationException exception) {
 
@@ -170,11 +179,12 @@ public class GymLoginServiceImpl implements GymLoginService {
 
         GymUserEntity user = userRepository
                 .findById(principal.getUserId())
-                .orElseThrow(() -> new BadCredentialsException(
-                        "Invalid account"));
+                .orElseThrow(() ->
+                        new BadCredentialsException(
+                                "Invalid account"));
 
         boolean valid =
-                Integer.valueOf(1).equals(user.getIsActive())
+                Integer.valueOf(0).equals(user.getIsInactive())
                 && Integer.valueOf(0).equals(user.getIsDeleted())
                 && Objects.equals(
                         user.getAuthVersion(),
@@ -188,18 +198,21 @@ public class GymLoginServiceImpl implements GymLoginService {
         return user;
     }
 
-    private GymLoginResponseDto toResponse(GymUserEntity user) {
+    private GymLoginResponseDto toResponse(
+            GymUserEntity user) {
 
         return new GymLoginResponseDto(
                 user.getId(),
                 user.getFullName(),
                 user.getEmail(),
                 Integer.valueOf(1).equals(
-                        user.getMustChangePassword())
+                        user.getMustChangePassword()),
+                currentUserRoleDao.findActiveRoles(user.getId())
         );
     }
 
-    private void clearSession(HttpServletRequest request) {
+    private void clearSession(
+            HttpServletRequest request) {
 
         SecurityContextHolder.clearContext();
 
@@ -209,13 +222,15 @@ public class GymLoginServiceImpl implements GymLoginService {
             session.invalidate();
         }
     }
+
     @Override
     public void logoutUser(
             HttpServletRequest request,
             HttpServletResponse response) {
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
         Long userId = null;
 
@@ -224,7 +239,8 @@ public class GymLoginServiceImpl implements GymLoginService {
                         instanceof GymAuthenticatedUser) {
 
             GymAuthenticatedUser principal =
-                    (GymAuthenticatedUser) authentication.getPrincipal();
+                    (GymAuthenticatedUser)
+                            authentication.getPrincipal();
 
             userId = principal.getUserId();
         }

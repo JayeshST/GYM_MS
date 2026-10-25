@@ -98,6 +98,8 @@ public class GymSecurityConfig {
                                     HttpMethod.GET,
                                     "/get-user/*")
                                 .authenticated()
+                               
+                              
                 .anyRequest()
                     .denyAll()
             .and()

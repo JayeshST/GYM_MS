@@ -10,8 +10,8 @@ public interface GymPermissionRepository
         extends JpaRepository<GymPermissionEntity, Long> {
 
     Optional<GymPermissionEntity>
-        findByPermissionCodeAndIsActiveAndIsDeleted(
+        findByPermissionCodeAndIsInactiveAndIsDeleted(
             String permissionCode,
-            Integer isActive,
+            Integer isInactive,
             Integer isDeleted);
 }

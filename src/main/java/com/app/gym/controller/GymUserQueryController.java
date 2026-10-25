@@ -33,8 +33,11 @@ public class GymUserQueryController {
             @RequestParam(name = "search", required = false)
             String search,
 
-            @RequestParam(name = "isActive", required = false)
-            Integer isActive,
+            @RequestParam(name = "isInactive", required = false)
+            Integer isInactive,
+
+            @RequestParam(name = "isDeleted", required = false)
+            Integer isDeleted,
 
             @RequestParam(name = "page", defaultValue = "0")
             int page,
@@ -45,7 +48,8 @@ public class GymUserQueryController {
         GymUserListResponseDto payload =
                 userQueryService.getUserList(
                         search,
-                        isActive,
+                        isInactive,
+                        isDeleted,
                         page,
                         size);
 
@@ -53,6 +57,20 @@ public class GymUserQueryController {
                 200,
                 true,
                 "User list fetched successfully",
+                payload);
+    }
+
+    @GetMapping("/get-user/{userId}")
+    public ResponseEntity<Map<String, Object>> getUserDetails(
+            @PathVariable("userId") Long userId) {
+
+        GymUserDetailsResponseDto payload =
+                userQueryService.getUserDetails(userId);
+
+        return buildResponse(
+                200,
+                true,
+                "User details fetched successfully",
                 payload);
     }
 
@@ -95,18 +113,5 @@ public class GymUserQueryController {
         return ResponseEntity.status(status)
                 .header("Cache-Control", "no-store")
                 .body(body);
-    }
-    @GetMapping("/get-user/{userId}")
-    public ResponseEntity<Map<String, Object>> getUserDetails(
-            @PathVariable("userId") Long userId) {
-
-        GymUserDetailsResponseDto payload =
-                userQueryService.getUserDetails(userId);
-
-        return buildResponse(
-                200,
-                true,
-                "User details fetched successfully",
-                payload);
     }
 }

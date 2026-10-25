@@ -60,7 +60,7 @@ public class GymPasswordServiceImpl implements GymPasswordService {
                         "Session is no longer valid"));
 
         boolean validAccount =
-                Integer.valueOf(1).equals(user.getIsActive())
+        		Integer.valueOf(0).equals(user.getIsInactive())
                 && Integer.valueOf(0).equals(user.getIsDeleted())
                 && user.getAuthVersion() != null
                 && Objects.equals(

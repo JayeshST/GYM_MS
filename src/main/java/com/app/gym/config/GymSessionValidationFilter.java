@@ -72,7 +72,7 @@ public class GymSessionValidationFilter extends OncePerRequestFilter {
 
         boolean valid =
                 user != null
-                && Integer.valueOf(1).equals(user.getIsActive())
+                && Integer.valueOf(0).equals(user.getIsInactive())
                 && Integer.valueOf(0).equals(user.getIsDeleted())
                 && user.getAuthVersion() != null
                 && Objects.equals(

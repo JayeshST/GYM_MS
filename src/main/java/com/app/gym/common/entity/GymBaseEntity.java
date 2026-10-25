@@ -28,10 +28,10 @@ public abstract class GymBaseEntity {
     )
     @Column(name = "ID", nullable = false, updatable = false)
     private Long id;
-
-    @Column(name = "IS_ACTIVE", nullable = false, precision = 1)
-    private Integer isActive = 1;
-
+    
+    @Column(name = "IS_INACTIVE", nullable = false, precision = 1)
+    private Integer isInactive = 0;
+    
     @Column(name = "IS_DELETED", nullable = false, precision = 1)
     private Integer isDeleted = 0;
 
@@ -80,15 +80,19 @@ public abstract class GymBaseEntity {
         this.id = id;
     }
 
-    public Integer getIsActive() {
-        return isActive;
-    }
+   
 
-    public void setIsActive(Integer isActive) {
-        this.isActive = isActive;
-    }
+    
 
-    public Integer getIsDeleted() {
+	public Integer getIsInactive() {
+		return isInactive;
+	}
+
+	public void setIsInactive(Integer isInactive) {
+		this.isInactive = isInactive;
+	}
+
+	public Integer getIsDeleted() {
         return isDeleted;
     }
 

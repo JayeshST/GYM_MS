@@ -9,9 +9,8 @@ import com.app.gym.role.entity.GymRoleEntity;
 public interface GymRoleRepository
         extends JpaRepository<GymRoleEntity, Long> {
 
-    Optional<GymRoleEntity>
-        findByRoleCodeAndIsActiveAndIsDeleted(
+    Optional<GymRoleEntity> findByRoleCodeAndIsInactiveAndIsDeleted(
             String roleCode,
-            Integer isActive,
+            Integer isInactive,
             Integer isDeleted);
 }

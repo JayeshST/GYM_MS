@@ -14,20 +14,25 @@ public interface GymAuthorizationRepository
         "from GymUserRoleEntity ur, GymRolePermissionEntity rp " +
         "where ur.role.id = rp.role.id " +
         "and ur.user.id = :userId " +
-        "and ur.user.isActive = 1 " +
+
+        "and ur.user.isInactive = 0 " +
         "and ur.user.isDeleted = 0 " +
-        "and ur.isActive = 1 " +
+
+        "and ur.isInactive = 0 " +
         "and ur.isDeleted = 0 " +
-        "and ur.role.isActive = 1 " +
+
+        "and ur.role.isInactive = 0 " +
         "and ur.role.isDeleted = 0 " +
-        "and rp.isActive = 1 " +
+
+        "and rp.isInactive = 0 " +
         "and rp.isDeleted = 0 " +
-        "and rp.permission.isActive = 1 " +
+
+        "and rp.permission.isInactive = 0 " +
         "and rp.permission.isDeleted = 0 " +
+
         "and rp.permission.permissionCode = :permissionCode"
     )
     long countActivePermissionMappings(
-        @Param("userId") Long userId,
-        @Param("permissionCode") String permissionCode
-    );
+            @Param("userId") Long userId,
+            @Param("permissionCode") String permissionCode);
 }

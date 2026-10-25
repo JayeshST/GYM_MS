@@ -4,13 +4,14 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.app.gym.role.entity.GymRolePermissionEntity;
+import com.app.gym.permission.entity.GymPermissionEntity;
 
 public interface GymRolePermissionRepository
-        extends JpaRepository<GymRolePermissionEntity, Long> {
+        extends JpaRepository<GymPermissionEntity, Long> {
 
-    Optional<GymRolePermissionEntity>
-        findByRole_IdAndPermission_Id(
-            Long roleId,
-            Long permissionId);
+    Optional<GymPermissionEntity>
+        findByPermissionCodeAndIsInactiveAndIsDeleted(
+            String permissionCode,
+            Integer isInactive,
+            Integer isDeleted);
 }

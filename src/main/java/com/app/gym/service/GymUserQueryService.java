@@ -7,7 +7,8 @@ public interface GymUserQueryService {
 
     GymUserListResponseDto getUserList(
             String search,
-            Integer isActive,
+            Integer isInactive,
+            Integer isDeleted,
             int page,
             int size);
 

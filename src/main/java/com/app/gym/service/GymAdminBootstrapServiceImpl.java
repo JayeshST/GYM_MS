@@ -70,8 +70,7 @@ public class GymAdminBootstrapServiceImpl
         }
 
         GymRoleEntity adminRole = roleRepository
-                .findByRoleCodeAndIsActiveAndIsDeleted(
-                        "ADMIN", 1, 0)
+        		.findByRoleCodeAndIsInactiveAndIsDeleted("ADMIN", 0, 0)
                 .orElseThrow(() -> new IllegalStateException(
                         "Active ADMIN role is missing"));
 
@@ -89,7 +88,7 @@ public class GymAdminBootstrapServiceImpl
         admin.setPasswordHash(passwordEncoder.encode(password));
         admin.setMustChangePassword(1);
         admin.setAuthVersion(0L);
-        admin.setIsActive(1);
+        admin.setIsInactive(1);
         admin.setIsDeleted(0);
 
         admin = userRepository.saveAndFlush(admin);
@@ -104,7 +103,7 @@ public class GymAdminBootstrapServiceImpl
 
         mapping.setUser(admin);
         mapping.setRole(adminRole);
-        mapping.setIsActive(1);
+        mapping.setIsInactive(1);
         mapping.setIsDeleted(0);
         mapping.setCreatedBy(adminId);
         mapping.setUpdatedBy(adminId);

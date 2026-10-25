@@ -14,7 +14,7 @@ import { apiErrorMessage } from '../../../core/utils/api-error';
   standalone: true,
   imports: [RouterLink],
   templateUrl: './dashboard.html',
-  styleUrl: './dashboard.scss'
+  styleUrl: '././dashboard.scss'
 })
 export class Dashboard {
   readonly auth = inject(AuthService);
